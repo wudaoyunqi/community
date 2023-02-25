@@ -1,0 +1,7 @@
+/.idea/*.xml
+/.mvn
+/target
+/HELP.md
+/mvnw
+/mvnw.cmd
+*.properties

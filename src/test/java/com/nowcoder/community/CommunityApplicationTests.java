@@ -2,6 +2,7 @@ package com.nowcoder.community;
 
 import com.nowcoder.community.dao.AlphaDAO;
 import com.nowcoder.community.service.AlphaService;
+import com.nowcoder.community.util.CommunityUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,6 +72,12 @@ public class CommunityApplicationTests implements ApplicationContextAware {
         System.out.println(alphaDAO);
         System.out.println(alphaService);
         System.out.println(simpleDateFormat);
+    }
+
+    @Test
+    public void testMd5() {
+        String password = CommunityUtil.md5("111111" + "abc");
+        System.out.println(password);
     }
 
 

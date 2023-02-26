@@ -4,6 +4,8 @@ import com.google.code.kaptcha.Producer;
 import com.nowcoder.community.entity.User;
 import com.nowcoder.community.service.UserService;
 import com.nowcoder.community.util.CommunityConstant;
+import com.nowcoder.community.util.CommunityUtil;
+import com.nowcoder.community.util.MailClient;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,10 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.CookieValue;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.*;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
 
 import javax.imageio.ImageIO;
 import javax.servlet.http.Cookie;
@@ -45,6 +46,12 @@ public class LoginController implements CommunityConstant {
     @Value("${server.servlet.context-path}")
     private String contextPath;
 
+    @Autowired
+    private TemplateEngine templateEngine;
+
+    @Autowired
+    private MailClient mailClient;
+
 
     /**
      * 访问localhost:8080/community/register地址，返回/site/register.html
@@ -64,6 +71,16 @@ public class LoginController implements CommunityConstant {
     @RequestMapping(path = "/login", method = RequestMethod.GET)
     public String getLoginPage() {
         return "/site/login";
+    }
+
+    /**
+     * 访问localhost:8080/community/forget地址，返回/site/forget.html
+     *
+     * @return
+     */
+    @RequestMapping(path = "/forget", method = RequestMethod.GET)
+    public String getForgetPage() {
+        return "/site/forget";
     }
 
 
@@ -169,6 +186,67 @@ public class LoginController implements CommunityConstant {
     public String logout(@CookieValue("ticket") String ticket) {
         userService.logout(ticket);
         return "redirect:/index";    // 重定向默认是get请求
+    }
+
+    /**
+     * 获取邮箱验证码并发送
+     *
+     * @param email
+     * @param session
+     * @return
+     */
+
+    @RequestMapping(path = "/forget/code", method = RequestMethod.GET)
+    @ResponseBody
+    public String getForgetCode(String email, HttpSession session) {
+        // 判断空值
+        if (StringUtils.isBlank(email)) {
+            return CommunityUtil.getJSONString(1, "邮箱不能为空！");
+        }
+
+        // 发送携带验证码的邮件
+        String verifyCode = CommunityUtil.generateUUID().substring(0, 4);
+        Context context = new Context();
+        context.setVariable("email", email);
+        context.setVariable("verifyCode", verifyCode);
+        String content = templateEngine.process("/mail/forget", context);
+        mailClient.sendMail(email, "牛客网——忘记密码", content);
+
+        // 保存验证码到session里
+        session.setAttribute("verifyCode", verifyCode);
+        return CommunityUtil.getJSONString(0);
+    }
+
+
+    /**
+     * 忘记密码，填写邮箱、验证码和新密码表单以此重置密码
+     *
+     * @param model
+     * @param email
+     * @param verifyCode
+     * @param newPassword
+     * @param session
+     * @return
+     */
+    @RequestMapping(path = "/forget", method = RequestMethod.POST)
+    public String forgetPassword(Model model, String email, String verifyCode, String newPassword, HttpSession session) {
+        // 检查验证码
+        String code = (String) session.getAttribute("verifyCode");
+        if (StringUtils.isBlank(code) || StringUtils.isBlank("verifyCode") || !code.equalsIgnoreCase(verifyCode)) {
+            model.addAttribute("codeMsg", "验证码不正确！");
+            return "/site/forget";
+        }
+
+        // 检查邮箱，新密码
+        Map<String, Object> map = userService.resetPassword(email, newPassword);
+        // 如果重置密码成功，则重定向回登录页面
+        if (map == null || map.isEmpty()) {
+            return "redirect:/login";
+        } else {
+            model.addAttribute("emailMsg", map.get("emailMsg"));
+            model.addAttribute("passwordMsg", map.get("passwordMsg"));
+            return "/site/forget";
+        }
     }
 
 

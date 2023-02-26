@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Map;
 
 /**
  * @Projectname: community
@@ -59,6 +60,13 @@ public class UserController {
         return "/site/setting";
     }
 
+    /**
+     * 上传头像
+     *
+     * @param headerImage
+     * @param model
+     * @return
+     */
     @LoginRequired
     @RequestMapping(path = "/upload", method = RequestMethod.POST)
     public String uploadHeader(MultipartFile headerImage, Model model) {
@@ -99,6 +107,7 @@ public class UserController {
     }
 
     /**
+     * 获取头像
      * 返回的是图片数据的二进制流，所以不是返回模板也不是返回json数据，故返回类型为空，而不是String
      *
      * @param fileName
@@ -128,6 +137,27 @@ public class UserController {
 //            os.close();
         }
 
+    }
+
+    /**
+     * 更新密码
+     *
+     * @param model
+     * @param oldPassword
+     * @param newPassword
+     * @return
+     */
+    @RequestMapping(path = "/updatePassword", method = RequestMethod.POST)
+    public String updatePassword(Model model, String oldPassword, String newPassword) {
+        User user = hostHolder.getUser();
+        Map<String, Object> map = userService.updatePassword(user.getId(), oldPassword, newPassword);
+        if (map == null || map.isEmpty()) {  // 更新密码成功，应该重定向回退出页，让用户重新登录
+            return "redirect:/logout";
+        } else {
+            model.addAttribute("oldPasswordMsg", map.get("oldPasswordMsg"));
+            model.addAttribute("newPasswordMsg", map.get("newPasswordMsg"));
+            return "/site/setting";
+        }
     }
 
 

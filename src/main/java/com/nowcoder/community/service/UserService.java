@@ -165,7 +165,14 @@ public class UserService implements CommunityConstant {
         loginTicketMapper.updateStatus(ticket, 1);
     }
 
-    public Map<String, Object> forgetPassword(String email, String code, String newPassword) {
+    /**
+     * 忘记密码——重置密码，已经输入了验证码并通过
+     *
+     * @param email
+     * @param newPassword
+     * @return
+     */
+    public Map<String, Object> resetPassword(String email, String newPassword) {
         Map<String, Object> map = new HashMap<>();
 
         // 验证空值
@@ -173,26 +180,71 @@ public class UserService implements CommunityConstant {
             map.put("emailMsg", "邮箱不能为空！");
             return map;
         }
-        if (StringUtils.isBlank(code)) {
-            map.put("codeMsg", "验证码不能为空！");
-            return map;
-        }
         if (StringUtils.isBlank(newPassword)) {
             map.put("passwordMsg", "密码不能为空！");
             return map;
         }
 
-        // 验证邮箱是否已被注册
-        return null;
+        // 验证邮箱是否已被注册(输入验证码只是验证邮箱是否有效)
+        User user = userMapper.selectByEmail(email);
+        if (user == null) {
+            map.put("emailMsg", "该邮箱未注册！");
+            return map;
+        }
 
+        // 重置密码
+        newPassword = CommunityUtil.md5(newPassword + user.getSalt());
+        userMapper.updatePassword(user.getId(), newPassword);
+
+        return map;
     }
 
     public LoginTicket getLoginTicket(String ticket) {
         return loginTicketMapper.selectByTicket(ticket);
     }
 
+    /**
+     * 更新头像
+     *
+     * @param userId
+     * @param newHeaderUrl
+     * @return
+     */
     public int updateHeader(int userId, String newHeaderUrl) {
         return userMapper.updateHeaderUrl(userId, newHeaderUrl);
+    }
+
+    /**
+     * 更新密码
+     *
+     * @param userId
+     * @param oldPassword
+     * @param newPassword
+     * @return
+     */
+    public Map<String, Object> updatePassword(int userId, String oldPassword, String newPassword) {
+        Map<String, Object> map = new HashMap<>();
+
+        // 空值处理
+        if (StringUtils.isBlank(oldPassword)) {
+            map.put("oldPasswordMsg", "原密码不能为空！");
+            return map;
+        }
+        if (StringUtils.isBlank(newPassword)) {
+            map.put("newPasswordMsg", "新密码不能为空！");
+            return map;
+        }
+
+        // 验证原密码
+        User user = userMapper.selectById(userId);
+        if (!CommunityUtil.md5(oldPassword + user.getSalt()).equals(user.getPassword())) {  // 原密码正确
+            map.put("oldPasswordMsg", "原密码不正确！");
+            return map;
+        }
+
+        // 更新密码
+        userMapper.updatePassword(userId, CommunityUtil.md5(newPassword + user.getSalt()));
+        return map;
     }
 
 

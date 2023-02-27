@@ -1,6 +1,7 @@
 package com.nowcoder.community.dao;
 
 import com.nowcoder.community.entity.Comment;
+import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 
@@ -30,5 +31,12 @@ public interface CommentMapper {
             "select count(id) from comment where status = 0 and entity_type = #{entityType} and entity_id = #{entityId}"
     )
     int selectCommentRowsByEntity(int entityType, int entityId);
+
+    @Insert(
+            "insert into comment (" + INSERT_FIELDS + ") values(#{userId}, #{entityType}, #{entityId}, #{targetId}, #{content}, #{status}, #{createTime})"
+    )
+    int insertComment(Comment comment);
+
+
 
 }

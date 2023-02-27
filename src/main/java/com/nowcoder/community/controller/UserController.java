@@ -147,6 +147,7 @@ public class UserController {
      * @param newPassword
      * @return
      */
+    @LoginRequired
     @RequestMapping(path = "/updatePassword", method = RequestMethod.POST)
     public String updatePassword(Model model, String oldPassword, String newPassword) {
         User user = hostHolder.getUser();

@@ -49,7 +49,7 @@ public class MapperTests {
         user.setEmail("wudaoyunqi@gmail.com");
         user.setType(1);
         user.setHeaderUrl("http://www.nowcoder.com/1.png");
-        user.setCreatedTime(new Date());
+        user.setCreateTime(new Date());
 
         int rows = userMapper.insertUser(user);
         System.out.println(rows);

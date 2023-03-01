@@ -72,15 +72,16 @@ public class RedisTests {
     @Test
     public void testSortedSets() {
         String redisKey = "redis:students";
+        redisTemplate.delete(redisKey);
 
-        redisTemplate.opsForZSet().add(redisKey, "a", 11);
-        redisTemplate.opsForZSet().add(redisKey, "b", 21);
-        redisTemplate.opsForZSet().add(redisKey, "c", 31);
-        redisTemplate.opsForZSet().add(redisKey, "d", 41);
+        redisTemplate.opsForZSet().add(redisKey, 1, 11);
+        redisTemplate.opsForZSet().add(redisKey, 2, 21);
+        redisTemplate.opsForZSet().add(redisKey, 3, 31);
+        redisTemplate.opsForZSet().add(redisKey, 4, 41);
 
         System.out.println(redisTemplate.opsForZSet().zCard(redisKey));
-        System.out.println(redisTemplate.opsForZSet().score(redisKey, "c"));
-        System.out.println(redisTemplate.opsForZSet().reverseRank(redisKey, "b"));
+//        System.out.println(redisTemplate.opsForZSet().score(redisKey, "c"));
+//        System.out.println(redisTemplate.opsForZSet().reverseRank(redisKey, "b"));
         System.out.println(redisTemplate.opsForZSet().range(redisKey, 0, 2));
         System.out.println(redisTemplate.opsForZSet().reverseRange(redisKey, 0, 2));
     }

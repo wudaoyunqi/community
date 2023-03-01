@@ -1,5 +1,9 @@
 package com.nowcoder.community.util;
 
+import java.util.Map;
+
+import static java.util.Map.entry;
+
 /**
  * @Projectname: community
  * @Filename: CommunityConstant
@@ -42,6 +46,20 @@ public interface CommunityConstant {
      * 实体类型：评论
      */
     int ENTITY_TYPE_COMMENT = 2;
+
+    /**
+     * 实体类型：用户
+     */
+    int ENTITY_TYPE_USER = 3;
+
+    /**
+     * 实体类型id -> 实体类型名字
+     */
+    Map<Integer, String> entityIdtoEntityName = Map.ofEntries(
+            entry(1, "post"),
+            entry(2, "comment"),
+            entry(3, "user")
+    );
 
 
 }

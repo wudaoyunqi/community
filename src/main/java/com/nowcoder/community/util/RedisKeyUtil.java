@@ -1,5 +1,7 @@
 package com.nowcoder.community.util;
 
+import static com.nowcoder.community.util.CommunityConstant.entityIdtoEntityName;
+
 /**
  * @Projectname: community
  * @Filename: RedisUtil
@@ -28,15 +30,15 @@ public class RedisKeyUtil {
     }
 
     // 某个用户关注的实体
-    // followee:userid:entityType -> zset(entityId, nowTime)
+    // followee:'user'userid:'user'entityType -> zset(entityId, nowTime)
     public static String getFolloweeKey(int userId, int entityType) {
-        return PREFIX_FOLLOWEE + SPLIT + userId + SPLIT + entityType;
+        return PREFIX_FOLLOWEE + SPLIT + "user" + userId + SPLIT + entityIdtoEntityName.get(entityType) + 's';
     }
 
     // 某个实体拥有的粉丝
-    // follower:entityType:entityId -> zset(userId, nowTime)
+    // follower:user/post:entityId -> zset(userId, nowTime)
     public static String getFollowerKey(int entityType, int entityId) {
-        return PREFIX_FOLLOWER + SPLIT + entityType + SPLIT + entityId;
+        return PREFIX_FOLLOWER + SPLIT + entityIdtoEntityName.get(entityType) + entityId;
     }
 
 }

@@ -41,19 +41,19 @@ public class MapperTests {
 
     @Test
     public void testSelectUser() {
-        User user = userMapper.selectById(101);
+        User user = userMapper.selectById(8);
         System.out.println(user);
     }
 
     @Test
     public void testInsertUser() {
         User user = new User();
-        user.setUsername("yunqi");
+        user.setUsername("User6");
         user.setPassword("111111");
         user.setSalt("abc");
-        user.setEmail("wudaoyunqi@gmail.com");
-        user.setType(1);
-        user.setHeaderUrl("http://www.nowcoder.com/1.png");
+        user.setEmail("user6@qq.com");
+        user.setType(0);
+        user.setHeaderUrl("http://www.nowcoder.com/1010.png");
         user.setCreateTime(new Date());
 
         int rows = userMapper.insertUser(user);

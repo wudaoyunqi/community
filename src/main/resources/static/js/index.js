@@ -32,3 +32,7 @@ function publish() {
     );
 
 }
+
+function profile_link(userId) {
+    location.href = CONTEXT_PATH + "/user/profile/" + userId;
+}

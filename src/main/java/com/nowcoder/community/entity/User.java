@@ -95,11 +95,10 @@ public class User {
         this.headerUrl = headerUrl;
     }
 
-    public Date getCreatedTime() {
+    public Date getCreateTime() {
         return createTime;
     }
-
-    public void setCreateTime(Date createdTime) {
+    public void setCreateTime(Date createTime) {
         this.createTime = createTime;
     }
 

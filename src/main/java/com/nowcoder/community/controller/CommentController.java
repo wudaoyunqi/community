@@ -30,6 +30,12 @@ public class CommentController {
     @Autowired
     private HostHolder hostHolder;
 
+    /**
+     * 添加评论
+     * @param discussPostId
+     * @param comment
+     * @return
+     */
     @LoginRequired
     @RequestMapping(path = "/add/{discussPostId}", method = RequestMethod.POST)
     public String addComment(@PathVariable("discussPostId") int discussPostId, Comment comment) {

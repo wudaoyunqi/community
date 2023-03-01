@@ -73,6 +73,13 @@ public class MessageController {
         return "/site/letter";
     }
 
+    /**
+     * 与某人的私信详情
+     * @param conversationId
+     * @param model
+     * @param page
+     * @return
+     */
     @RequestMapping(path = "/letter/detail/{conversationId}", method = RequestMethod.GET)
     public String getLetterDetail(@PathVariable("conversationId") String conversationId, Model model, Page page) {
         User user = hostHolder.getUser();
@@ -104,6 +111,11 @@ public class MessageController {
         return "/site/letter-detail";
     }
 
+    /**
+     * 获取私信的对象
+     * @param conversationId
+     * @return
+     */
     private User getLetterTarget(String conversationId) {
         String[] ids = conversationId.split("_");
         int id0 = Integer.parseInt(ids[0]);

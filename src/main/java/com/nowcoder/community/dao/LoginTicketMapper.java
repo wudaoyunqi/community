@@ -12,6 +12,7 @@ import org.apache.ibatis.annotations.*;
  */
 
 @Mapper
+@Deprecated
 public interface LoginTicketMapper {
     String TABLE_NAME = "login_ticket";
     String INSERT_FIELDS = "user_id, ticket, status, expired";

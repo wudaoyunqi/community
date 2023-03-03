@@ -61,5 +61,24 @@ public interface CommunityConstant {
             entry(3, "user")
     );
 
+    /**
+     * 主题评论
+     */
+    String TOPIC_COMMENT = "comment";
+
+    /**
+     * 主题：点赞
+     */
+    String TOPIC_LIKE = "like";
+
+    /**
+     * 主题：关注
+     */
+    String TOPIC_FOLLOW = "follow";
+
+    /**
+     * 系统用户ID
+     */
+    int SYSTEM_USER_ID = 1;
 
 }

@@ -154,13 +154,13 @@ public class LoginController implements CommunityConstant {
         // 验证码的归属者
         String kaptchaOwner = CommunityUtil.generateUUID();
         Cookie cookie = new Cookie("kaptchaOwner", kaptchaOwner);
-        cookie.setMaxAge(10);
+        cookie.setMaxAge(120);
         cookie.setPath(contextPath);
         response.addCookie(cookie);
 
         // 将验证码存入Redis
         String redisKey = RedisKeyUtil.getKaptchaKey(kaptchaOwner);
-        redisTemplate.opsForValue().set(redisKey, text, 10, TimeUnit.SECONDS);
+        redisTemplate.opsForValue().set(redisKey, text, 120, TimeUnit.SECONDS);
 
         // 将图片输出给浏览器
         response.setContentType("image/png");

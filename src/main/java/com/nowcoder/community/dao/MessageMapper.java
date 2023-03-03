@@ -74,5 +74,35 @@ public interface MessageMapper {
     )
     int updateStatus(List<Integer> ids, int status);
 
+    // 查询所有主题下最新的通知
+    @Select(
+            "select " + SELECT_FIELDS + " from message where id in " +
+                    "(select max(id) from message where status != 2 and from_id = 1 and to_id = #{userId} and conversation_id = #{topic})"
+    )
+    Message selectLatestNotice(int userId, String topic);
+
+    // 查询某个主题下的通知数量
+    @Select(
+            "select count(id) from message where status != 2 and from_id = 1 and to_id = #{userId} and conversation_id = #{topic}"
+    )
+    int selectNoticeCount(int userId, String topic);
+
+    // 查询未读的通知数量
+    @Select(
+            "<script>" +
+                    "select count(id) from message where status = 0 and from_id = 1 and to_id = #{userId}" +
+                    "<if test=\"topic != null\">" +
+                    "and conversation_id = #{topic}" +
+                    "</if>" +
+                    "</script>"
+    )
+    int selectNoticeUnreadCount(int userId, String topic);
+
+    // 查询某个主题的通知列表，支持分页
+    @Select(
+            "select " + SELECT_FIELDS +
+                    " from message where status != 2 and from_id = 1 and to_id = #{userId} and conversation_id = #{topic} order by create_time desc limit #{offset}, #{limit}"
+    )
+    List<Message> selectNotices(int userId, String topic, int offset, int limit);
 
 }

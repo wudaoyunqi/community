@@ -41,6 +41,10 @@ public class CommentService {
         return commentMapper.selectCommentRowsByEntity(entityType, entityId);
     }
 
+    public Comment getCommentById(int id) {
+        return commentMapper.selectCommentById(id);
+    }
+
     /**
      * 先增加评论，再更新帖子的评论数量
      *

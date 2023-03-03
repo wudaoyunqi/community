@@ -38,5 +38,9 @@ public interface CommentMapper {
     int insertComment(Comment comment);
 
 
+    @Select(
+            "select " + SELECT_FIELDS + " from comment where id = #{id}"
+    )
+    Comment selectCommentById(int id);
 
 }

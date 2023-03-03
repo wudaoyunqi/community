@@ -1,10 +1,14 @@
 package com.nowcoder.community.controller;
 
 import com.nowcoder.community.annotation.LoginRequired;
+import com.nowcoder.community.entity.Event;
 import com.nowcoder.community.entity.Page;
 import com.nowcoder.community.entity.User;
+import com.nowcoder.community.event.EventConsumer;
+import com.nowcoder.community.event.EventProducer;
 import com.nowcoder.community.service.FollowService;
 import com.nowcoder.community.service.UserService;
+import com.nowcoder.community.util.CommunityConstant;
 import com.nowcoder.community.util.CommunityUtil;
 import com.nowcoder.community.util.HostHolder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +35,7 @@ import static com.nowcoder.community.util.CommunityConstant.ENTITY_TYPE_USER;
  */
 
 @Controller
-public class FollowController {
+public class FollowController implements CommunityConstant {
     @Autowired
     private FollowService followService;
 
@@ -40,6 +44,13 @@ public class FollowController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private EventProducer eventProducer;
+
+    @Autowired
+    private EventConsumer eventConsumer;
+
 
     /**
      * 关注（异步请求）
@@ -54,6 +65,16 @@ public class FollowController {
     public String follow(int entityType, int entityId) {
         User user = hostHolder.getUser();
         followService.follow(user.getId(), entityType, entityId);
+
+        // 触发关注事件
+        Event event = new Event()
+                .setTopic(TOPIC_FOLLOW)
+                .setUserId(user.getId())
+                .setEntityType(entityType)
+                .setEntityId(entityId)
+                .setEntityUserId(entityId);
+        eventProducer.fireEvent(event);
+
         return CommunityUtil.getJSONString(0, "已关注！");
     }
 
@@ -141,6 +162,7 @@ public class FollowController {
 
     /**
      * 判断当前登录用户是否关注该用户
+     *
      * @param userId
      * @return
      */

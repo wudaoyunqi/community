@@ -59,6 +59,7 @@ public class AlphaService {
 //        System.out.println("初始化AlphaService");
     }
 
+    // @PreDestroy指明该方法在销毁之前调用
     @PreDestroy
     public void destroy() {
 //        System.out.println("销毁AlphaService");

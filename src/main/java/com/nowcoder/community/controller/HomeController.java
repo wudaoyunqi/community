@@ -38,7 +38,7 @@ public class HomeController implements CommunityConstant {
     @Autowired
     private LikeService likeService;
 
-    @RequestMapping(path = {"/index"}, method = {RequestMethod.GET})
+    @RequestMapping(path = {"/index", "/"}, method = {RequestMethod.GET})
     public String getIndexPage(Model model, Page page) {
         // 方法调用前，SpringMVC会自动实例化Model和Page，并将Page注入Model，所以，在thymeleaf中可以直接访问Page对象中的数据
         page.setRows(discussPostService.getDiscussPostRows(0));
@@ -64,6 +64,12 @@ public class HomeController implements CommunityConstant {
     @RequestMapping(path = "/error", method = RequestMethod.GET)
     public String getErrorPage() {
         return "/error/500";
+    }
+
+    // 拒绝访问时的提示页面
+    @RequestMapping(path = "/denied", method = {RequestMethod.GET})
+    public String getDeniedPage() {
+        return "/error/404";
     }
 
 

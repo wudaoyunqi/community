@@ -20,6 +20,7 @@ import java.lang.reflect.Method;
  * @Description: TODO
  */
 @Component
+@Deprecated
 public class LoginRequiredInterceptor implements HandlerInterceptor {
     @Autowired
     private HostHolder hostHolder;

@@ -6,6 +6,11 @@ import com.nowcoder.community.service.UserService;
 import com.nowcoder.community.util.CookieUtil;
 import com.nowcoder.community.util.HostHolder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.context.SecurityContextImpl;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
@@ -43,6 +48,14 @@ public class LoginTicketInterceptor implements HandlerInterceptor {
                 User user = userService.getUserById(loginTicket.getUserId());
                 // 在本次请求中持有用户（从发起请求到请求处理完毕，对应的线程一直都存在，所以可以直接获取和设置）
                 hostholder.setUser(user);
+
+                // 构建用户认证结果，并存入SecurityContext，以便于Security进行授权
+                Authentication authentication = new UsernamePasswordAuthenticationToken(
+                        user, user.getPassword(), userService.getAuthorities(user.getId()));
+//                SecurityContext context = SecurityContextHolder.createEmptyContext();
+//                context.setAuthentication(authentication);
+//                SecurityContextHolder.setContext(context);
+                SecurityContextHolder.setContext(new SecurityContextImpl(authentication));
             }
         }
         return true;
@@ -61,5 +74,6 @@ public class LoginTicketInterceptor implements HandlerInterceptor {
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
         hostholder.clear();
+//        SecurityContextHolder.clearContext();
     }
 }

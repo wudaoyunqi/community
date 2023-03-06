@@ -184,5 +184,83 @@ public class DiscussPostController implements CommunityConstant {
         return "/site/discuss-detail";
     }
 
+    /**
+     * 置顶、取消置顶
+     *
+     * @param id
+     * @return
+     */
+    @RequestMapping(path = "/top", method = RequestMethod.POST)
+    @ResponseBody
+    public String setTop(int id) {
+        DiscussPost post = discussPostService.getDiscussPostById(id);
+
+        // 获取置顶状态，1为置顶，0为正常状态，1^1=0, 0^1=1
+        int type = post.getType() ^ 1;
+        discussPostService.updateDiscussPostType(id, type);
+        // 返回的结果
+        Map<String, Object> map = new HashMap<>();
+        map.put("type", type);
+
+        // 触发发帖事件，将其加入到Elasticsearch服务器上
+        Event event = new Event()
+                .setTopic(TOPIC_PUBLISH)
+                .setUserId(hostHolder.getUser().getId())
+                .setEntityType(ENTITY_TYPE_POST)
+                .setEntityId(id);
+        eventProducer.fireEvent(event);
+        return CommunityUtil.getJSONString(0, null, map);
+    }
+
+    /**
+     * 加精、取消加精
+     *
+     * @param id
+     * @return
+     */
+    @RequestMapping(path = "/wonderful", method = RequestMethod.POST)
+    @ResponseBody
+    public String setWonderful(int id) {
+        DiscussPost post = discussPostService.getDiscussPostById(id);
+
+        // 获取加精状态，1为加精，0为正常状态，1^1=0, 0^1=1
+        int status = post.getStatus() ^ 1;
+        discussPostService.updateDiscussPostStatus(id, status);
+        // 返回的结果
+        Map<String, Object> map = new HashMap<>();
+        map.put("status", status);
+
+        // 触发发帖事件，将其加入到Elasticsearch服务器上
+        Event event = new Event()
+                .setTopic(TOPIC_PUBLISH)
+                .setUserId(hostHolder.getUser().getId())
+                .setEntityType(ENTITY_TYPE_POST)
+                .setEntityId(id);
+        eventProducer.fireEvent(event);
+        return CommunityUtil.getJSONString(0, null, map);
+    }
+
+    /**
+     * 加精
+     *
+     * @param id
+     * @return
+     */
+    @RequestMapping(path = "/delete", method = RequestMethod.POST)
+    @ResponseBody
+    public String setDelete(int id) {
+        discussPostService.updateDiscussPostStatus(id, 2);
+
+        // 触发删帖事件，将其加入到Elasticsearch服务器上
+        Event event = new Event()
+                .setTopic(TOPIC_DELETE)
+                .setUserId(hostHolder.getUser().getId())
+                .setEntityType(ENTITY_TYPE_POST)
+                .setEntityId(id);
+        eventProducer.fireEvent(event);
+
+        return CommunityUtil.getJSONString(0);
+    }
+
 
 }

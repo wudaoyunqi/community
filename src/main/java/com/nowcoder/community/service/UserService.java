@@ -71,7 +71,10 @@ public class UserService implements CommunityConstant {
     // 3. 数据变更时清除缓存数据
     private void clearCache(int userId) {
         String redisKey = RedisKeyUtil.getUserKey(userId);
-        redisTemplate.delete(redisKey);
+//        System.out.println("[刷新缓存前]：" + redisTemplate.hasKey(redisKey));
+        boolean flag = redisTemplate.delete(redisKey);
+//        System.out.println(flag);
+//        System.out.println("[是否刷新缓存]：" + redisTemplate.hasKey(redisKey));
     }
 
 
@@ -80,6 +83,7 @@ public class UserService implements CommunityConstant {
         User user = getCache(id);
         if (user == null) {
             user = initCache(id);
+            System.out.println("用户" + id + "不在缓存，从数据表中重新拉取数据");
         }
         return user;
     }
@@ -267,6 +271,7 @@ public class UserService implements CommunityConstant {
 //        return userMapper.updateHeaderUrl(userId, newHeaderUrl);
         int row = userMapper.updateHeaderUrl(userId, newHeaderUrl);
         clearCache(userId);
+//        System.out.println("是否刷新缓存：" + redisTemplate.hasKey(RedisKeyUtil.getUserKey(userId)));
         return row;
     }
 

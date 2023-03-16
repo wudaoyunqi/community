@@ -142,12 +142,14 @@ public class AlphaService {
     }
 
     // 让该方法在多线程环境下，被异步地调用(将该方法视为线程体)
-//    @Async()
+    // 需要在另一个方法调用该方法
+    @Async()
     public void execute1() {
         logger.info("execute1");
     }
 
-    //    @Scheduled(initialDelay = 10000, fixedRate = 1000)
+    // 不需要外部调用，程序启动就会被自动调用
+//    @Scheduled(initialDelay = 10000, fixedRate = 1000)
     public void execute2() {
         logger.info("execute2");
     }

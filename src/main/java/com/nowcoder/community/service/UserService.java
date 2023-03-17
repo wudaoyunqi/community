@@ -189,41 +189,55 @@ public class UserService implements CommunityConstant {
             return map;
         }
         // 生成登录凭证
-        LoginTicket loginTicket = new LoginTicket();
-        loginTicket.setUserId(user.getId());
-        loginTicket.setTicket(CommunityUtil.generateUUID());
-        loginTicket.setStatus(0);
-        loginTicket.setExpired(new Date(System.currentTimeMillis() + expiredSeconds * 1000));
+//        LoginTicket loginTicket = new LoginTicket();
+//        loginTicket.setUserId(user.getId());
+//        loginTicket.setTicket(CommunityUtil.generateUUID());
+//        loginTicket.setStatus(0);
+//        loginTicket.setExpired(new Date(System.currentTimeMillis() + expiredSeconds * 1000));
 //        loginTicketMapper.insertLoginTicket(loginTicket);
 
-        String redisKey = RedisKeyUtil.getTicketKey(loginTicket.getTicket());
-        redisTemplate.opsForValue().set(redisKey, loginTicket);
+        // 将登录凭证存储在Redis中（过期时间为30分钟）
+        // 不设置过期了，因为后续有一个关于统计uv和dau的需求
+        // 但黑马点评实现了uv和dau的功能，并且也将登录凭证过期了
+//        String redisKey = RedisKeyUtil.getTicketKey(loginTicket.getTicket());
+//        redisTemplate.opsForValue().set(redisKey, loginTicket);
 
-        map.put("ticket", loginTicket.getTicket());
+        // 生成登录凭证
+
+        String token = CommunityUtil.generateUUID();
+        String redisKey = RedisKeyUtil.getTokenKey(token);
+        redisTemplate.opsForValue().set(redisKey, user);
+        redisTemplate.expire(redisKey, 30L, TimeUnit.MINUTES);   // 设置过期时间30分钟
+
+        map.put("token", token);
 
         return map;
     }
 
 
-    public void logout(String ticket) {
+    public void logout(String token) {
 //        loginTicketMapper.updateStatus(ticket, 1);
-        String redisKey = RedisKeyUtil.getTicketKey(ticket);
+        String redisKey = RedisKeyUtil.getTokenKey(token);
         LoginTicket loginTicket = (LoginTicket) redisTemplate.opsForValue().get(redisKey);
         loginTicket.setStatus(1);
         redisTemplate.opsForValue().set(redisKey, loginTicket);
     }
 
-    /**
-     * 只被LoginTicketInterceptor调用
-     *
-     * @param ticket
-     * @return
-     */
-    public LoginTicket getLoginTicket(String ticket) {
-//        return loginTicketMapper.selectByTicket(ticket);
-        String redisKey = RedisKeyUtil.getTicketKey(ticket);
-        return (LoginTicket) redisTemplate.opsForValue().get(redisKey);
+//    /**
+//     * 只被LoginTicketInterceptor调用
+//     *
+//     * @param ticket
+//     * @return
+//     */
+//    public LoginTicket getLoginTicket(String ticket) {
+////        return loginTicketMapper.selectByTicket(ticket);
+//        String redisKey = RedisKeyUtil.getTokenKey(ticket);
+//        return (LoginTicket) redisTemplate.opsForValue().get(redisKey);
+//    }
+    public User getLoginUser(String token){
+
     }
+
 
     /**
      * 忘记密码——重置密码，已经输入了验证码并通过

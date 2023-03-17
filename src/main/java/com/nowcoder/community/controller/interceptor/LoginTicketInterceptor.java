@@ -38,10 +38,10 @@ public class LoginTicketInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         // 从cookie中获取凭证
-        String ticket = CookieUtil.getValue(request, "ticket");
-        if (ticket != null) {
-            // 获取登录凭证
-            LoginTicket loginTicket = userService.getLoginTicket(ticket);
+        String token = CookieUtil.getValue(request, "token");
+        if (token != null) {
+            // 从Redis中获取登录凭证（旧版是访问数据库中的login_ticket表得到token）
+            LoginTicket loginTicket = userService.getLoginTicket(token);
             // 检查凭证是否有效
             if (loginTicket != null && loginTicket.getStatus() == 0 && loginTicket.getExpired().after(new Date())) {
                 // 根据凭证获取用户

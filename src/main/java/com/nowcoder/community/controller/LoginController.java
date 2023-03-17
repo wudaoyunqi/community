@@ -187,7 +187,7 @@ public class LoginController implements CommunityConstant {
     @RequestMapping(path = "/login", method = RequestMethod.POST)
     public String login(Model model, String username, String password, String code, boolean rememberme,
             /*HttpSession session,*/ HttpServletResponse response, @CookieValue(value = "kaptchaOwner", required = false) String kaptchaOwner) {
-        // 检查验证码
+        // 检查验证码（旧版是从session中取出验证码的）
 //        String kaptcha = (String) session.getAttribute("kaptcha");
         String kaptcha = null;
         if (StringUtils.isNotBlank(kaptchaOwner)) {
@@ -206,9 +206,10 @@ public class LoginController implements CommunityConstant {
         // 检查账号，密码
         int expiredSeconds = rememberme ? REMEMBER_EXPIRED_SECONDS : DEFAULT_EXPIRED_SECONDS;
         Map<String, Object> map = userService.login(username, password, expiredSeconds);
-        if (map.containsKey("ticket")) {
-            Cookie cookie = new Cookie("ticket", map.get("ticket").toString());
+        if (map.containsKey("token")) {
+            Cookie cookie = new Cookie("token", map.get("token").toString());
             cookie.setPath(contextPath);
+            // 若设置了过期时间，浏览器就会把cookie写入硬盘里，关闭后再次打开浏览器，cookie仍然有效直到超过设定的过期时间
             cookie.setMaxAge(expiredSeconds);
             response.addCookie(cookie);
             return "redirect:/index";     // 登录成功，重定向回首页
@@ -222,8 +223,8 @@ public class LoginController implements CommunityConstant {
 
 
     @RequestMapping(path = "/logout", method = RequestMethod.GET)
-    public String logout(@CookieValue("ticket") String ticket) {
-        userService.logout(ticket);
+    public String logout(@CookieValue("token") String token) {
+        userService.logout(token);
         SecurityContextHolder.clearContext();
         return "redirect:/index";    // 重定向默认是get请求
     }

@@ -35,9 +35,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         // /**表示static目录下所有的文件夹
-        registry.addInterceptor(alphaInterceptor)
-                .excludePathPatterns("/**/*.css", "/**/*.js", "/**/*.png", "/**/*.jpg", "/**/*.jpeg")
-                .addPathPatterns("/register", "/login");
+//        registry.addInterceptor(alphaInterceptor)
+//                .excludePathPatterns("/**/*.css", "/**/*.js", "/**/*.png", "/**/*.jpg", "/**/*.jpeg")
+//                .addPathPatterns("/register", "/login");
 
         // 在所有路径都生效
         registry.addInterceptor(loginTicketInterceptor)

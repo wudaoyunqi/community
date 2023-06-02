@@ -7,6 +7,8 @@ import com.nowcoder.community.service.DiscussPostService;
 import com.nowcoder.community.service.LikeService;
 import com.nowcoder.community.service.UserService;
 import com.nowcoder.community.util.CommunityConstant;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -19,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+
 /**
  * @Projectname: community
  * @Filename: HomeController
@@ -29,6 +32,7 @@ import java.util.Map;
 
 @Controller
 public class HomeController implements CommunityConstant {
+    private static final Logger logger = LoggerFactory.getLogger(HomeController.class);
 
     @Autowired
     private UserService userService;
@@ -41,6 +45,7 @@ public class HomeController implements CommunityConstant {
 
     @RequestMapping(path = {"/index"}, method = {RequestMethod.GET})
     public String getIndexPage(Model model, Page page, @RequestParam(name = "orderMode", defaultValue = "0") int orderMode) {
+        long start = System.currentTimeMillis();
         // 方法调用前，SpringMVC会自动实例化Model和Page，并将Page注入Model，所以，在thymeleaf中可以直接访问Page对象中的数据
         page.setRows(discussPostService.getDiscussPostRows(0));
         page.setPath("/index?orderMode=" + orderMode);
@@ -60,6 +65,8 @@ public class HomeController implements CommunityConstant {
         }
         model.addAttribute("discussPosts", discussPosts);
         model.addAttribute("orderMode", orderMode);
+        long end = System.currentTimeMillis();
+        System.out.println("获取首页一共花了" + (double) (end - start) / 1000 + "秒");
         return "index";
     }
 

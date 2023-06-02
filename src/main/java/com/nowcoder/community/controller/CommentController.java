@@ -48,7 +48,7 @@ public class CommentController implements CommunityConstant {
     private DiscussPostService discussPostService;
 
     @Autowired
-    private RedisTemplate redisTemplate;
+    private RedisTemplate<String, Object> redisTemplate;
 
 
     /**
@@ -67,27 +67,32 @@ public class CommentController implements CommunityConstant {
         commentService.addComment(comment);
 
         // 触发评论事件
-        Event event = new Event().setTopic(TOPIC_COMMENT)
+        Event event = new Event()
+                .setTopic(TOPIC_COMMENT)
                 .setUserId(hostHolder.getUser().getId())
                 .setEntityType(comment.getEntityType())
                 .setEntityId(comment.getEntityId())
                 .setData("postId", discussPostId);
+
         // 评论的帖子作者和评论作者为entityUserId
         if (comment.getEntityType() == ENTITY_TYPE_POST) {
             DiscussPost target = discussPostService.getDiscussPostById(discussPostId);
             event.setEntityUserId(target.getUserId());
         } else if (comment.getEntityType() == ENTITY_TYPE_COMMENT) {
-            // 若回复楼中楼
+            // 若回复楼中楼（前端会自动发来targetId = 该回复的作者id）
             if (comment.getTargetId() != 0) {
                 event.setEntityUserId(comment.getTargetId());
-            } else {   // 若回复层主
+            } else {
+                // 若回复层主
                 Comment target = commentService.getCommentById(comment.getEntityId());
                 event.setEntityUserId(target.getUserId());
             }
         }
+
         if (hostHolder.getUser().getId() != event.getEntityUserId()) {
             eventProducer.fireEvent(event);
         }
+
         if (comment.getEntityType() == ENTITY_TYPE_POST) {
             // 触发发帖事件
             event = new Event()

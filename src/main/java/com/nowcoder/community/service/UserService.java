@@ -41,11 +41,8 @@ public class UserService implements CommunityConstant {
     @Autowired
     private TemplateEngine templateEngine;
 
-//    @Autowired
-//    LoginTicketMapper loginTicketMapper;
-
     @Autowired
-    private RedisTemplate redisTemplate;
+    private RedisTemplate<String, Object> redisTemplate;
 
     @Value("${community.path.domain}")
     private String domain;
@@ -54,35 +51,31 @@ public class UserService implements CommunityConstant {
     private String contextPath;
 
     // 1. 优先从缓存中取值
-    private User getCache(int userId) {
+    private User getUserCache(int userId) {
         String redisKey = RedisKeyUtil.getUserKey(userId);
         return (User) redisTemplate.opsForValue().get(redisKey);
     }
 
     // 2. 取不到时初始化缓存数据
-    private User initCache(int userId) {
+    // keypoint 后续做缓存穿透的处理
+    private User initUserCache(int userId) {
         User user = userMapper.selectById(userId);
         String redisKey = RedisKeyUtil.getUserKey(userId);
-        // 设置key过期时间为一小时
-        redisTemplate.opsForValue().set(redisKey, user, 3600, TimeUnit.SECONDS);
+        // 设置key过期时间为半小时
+        redisTemplate.opsForValue().set(redisKey, user, 30L, TimeUnit.MINUTES);
         return user;
     }
 
     // 3. 数据变更时清除缓存数据
-    private void clearCache(int userId) {
+    private void clearUserCache(int userId) {
         String redisKey = RedisKeyUtil.getUserKey(userId);
-//        System.out.println("[刷新缓存前]：" + redisTemplate.hasKey(redisKey));
-        boolean flag = redisTemplate.delete(redisKey);
-//        System.out.println(flag);
-//        System.out.println("[是否刷新缓存]：" + redisTemplate.hasKey(redisKey));
+        redisTemplate.delete(redisKey);
     }
 
-
     public User getUserById(int id) {
-//        return userMapper.selectById(id);
-        User user = getCache(id);
+        User user = getUserCache(id);
         if (user == null) {
-            user = initCache(id);
+            user = initUserCache(id);
             System.out.println("用户" + id + "不在缓存，从数据表中重新拉取数据");
         }
         return user;
@@ -146,14 +139,13 @@ public class UserService implements CommunityConstant {
         return map;
     }
 
-
     public int activation(int userId, String code) {
         User user = userMapper.selectById(userId);
         if (user.getStatus() == 1) {
             return ACTIVATION_REPEAT;
         } else if (user.getActivationCode().equals(code)) {
             userMapper.updateStatus(userId, 1);
-            clearCache(userId);
+            clearUserCache(userId);
             return ACTIVATION_SUCCESS;
         } else {
             return ACTIVATION_FAILURE;
@@ -171,7 +163,7 @@ public class UserService implements CommunityConstant {
             map.put("passwordMsg", "密码不能为空！");
             return map;
         }
-        // 验证账号
+        // 验证账号（必须走DB）
         User user = userMapper.selectByName(username);
         if (user == null) {
             map.put("usernameMsg", "该账号不存在！");
@@ -188,26 +180,26 @@ public class UserService implements CommunityConstant {
             map.put("passwordMsg", "密码不正确");
             return map;
         }
-        // 生成登录凭证
+
+        // 生成登录凭证（牛客官方代码——最终版，将loginTicket作为value的类，实际上数据库不再存在LoginTicket表）
 //        LoginTicket loginTicket = new LoginTicket();
 //        loginTicket.setUserId(user.getId());
 //        loginTicket.setTicket(CommunityUtil.generateUUID());
 //        loginTicket.setStatus(0);
 //        loginTicket.setExpired(new Date(System.currentTimeMillis() + expiredSeconds * 1000));
 //        loginTicketMapper.insertLoginTicket(loginTicket);
-
         // 将登录凭证存储在Redis中（过期时间为30分钟）
         // 不设置过期了，因为后续有一个关于统计uv和dau的需求
         // 但黑马点评实现了uv和dau的功能，并且也将登录凭证过期了
 //        String redisKey = RedisKeyUtil.getTicketKey(loginTicket.getTicket());
 //        redisTemplate.opsForValue().set(redisKey, loginTicket);
 
-        // 生成登录凭证
 
+        // 生成登录凭证 <token, userId>
         String token = CommunityUtil.generateUUID();
         String redisKey = RedisKeyUtil.getTokenKey(token);
-        redisTemplate.opsForValue().set(redisKey, user);
-        redisTemplate.expire(redisKey, 30L, TimeUnit.MINUTES);   // 设置过期时间30分钟
+        redisTemplate.opsForValue().set(redisKey, user.getId());
+        redisTemplate.expire(redisKey, expiredSeconds, TimeUnit.MINUTES);   // 设置过期时间1h
 
         map.put("token", token);
 
@@ -215,15 +207,25 @@ public class UserService implements CommunityConstant {
     }
 
 
+    //    public void logout(String token) {
+////        loginTicketMapper.updateStatus(ticket, 1);
+//        String redisKey = RedisKeyUtil.getTokenKey(token);
+//        LoginTicket loginTicket = (LoginTicket) redisTemplate.opsForValue().get(redisKey);
+//        loginTicket.setStatus(1);
+//        redisTemplate.opsForValue().set(redisKey, loginTicket);
+//    }
+
+    /**
+     * keypoint 登出只需要删除token缓存，用户信息缓存不用删除，还能减少一次缓存未命中
+     * @param token
+     */
     public void logout(String token) {
-//        loginTicketMapper.updateStatus(ticket, 1);
         String redisKey = RedisKeyUtil.getTokenKey(token);
-        LoginTicket loginTicket = (LoginTicket) redisTemplate.opsForValue().get(redisKey);
-        loginTicket.setStatus(1);
-        redisTemplate.opsForValue().set(redisKey, loginTicket);
+        redisTemplate.delete(redisKey);
     }
 
-//    /**
+
+    //    /**
 //     * 只被LoginTicketInterceptor调用
 //     *
 //     * @param ticket
@@ -234,10 +236,6 @@ public class UserService implements CommunityConstant {
 //        String redisKey = RedisKeyUtil.getTokenKey(ticket);
 //        return (LoginTicket) redisTemplate.opsForValue().get(redisKey);
 //    }
-    public User getLoginUser(String token){
-
-    }
-
 
     /**
      * 忘记密码——重置密码，已经输入了验证码并通过
@@ -269,28 +267,35 @@ public class UserService implements CommunityConstant {
         // 重置密码
         newPassword = CommunityUtil.md5(newPassword + user.getSalt());
         userMapper.updatePassword(user.getId(), newPassword);
-        clearCache(user.getId());
 
         return map;
     }
 
     /**
      * 更新头像
+     * todo 应该实现用户未登出就能刷新头像的功能，但头像的获取是通过hostHolder存储的完整User对象，而hostHolder是从redis里拿到的user
+     * todo 所以更新头像应该更新缓存？对！更新它！别怕！用户只可能修改自己的头像，不会出现并发问题，只会出现数据短期不一致的问题
+     *
+     * keypoint 对个鸡毛，在存储认证信息的时候只用存<token, userId>，用户的具体信息单独存<userId, userMap>，更改头像或者用户名的时候只需要删除<userId, userMap>
+     *     这样下次请求来的时候再去访问数据库获得<userId, newUserMap>，同时<token, userId>还在，不会改变登录状态
      *
      * @param userId
      * @param newHeaderUrl
      * @return
      */
     public int updateHeader(int userId, String newHeaderUrl) {
-//        return userMapper.updateHeaderUrl(userId, newHeaderUrl);
         int row = userMapper.updateHeaderUrl(userId, newHeaderUrl);
-        clearCache(userId);
-//        System.out.println("是否刷新缓存：" + redisTemplate.hasKey(RedisKeyUtil.getUserKey(userId)));
+        clearUserCache(userId);
         return row;
     }
 
     /**
      * 更新密码
+     * 用户更新密码后，应该让用户重新登录，所以应该清除redis里存的登录用户信息，
+     * 那么下次请求拦截器首先查询redis里token对应的用户信息，发现没有，就让用户重新登录
+     * 但这里不用clearCache了，因为controller实现的逻辑是重定向回退出页，再重定向回首页，/logout已经实现了清除登录用户的缓存信息
+     * 但是是否有必要更新数据库和删除缓存放一起呢？
+     * keypoint 不对，redis里存的最好是非敏感信息，所以密码更新了不影响<userId, userMap>记录，不用删除
      *
      * @param userId
      * @param oldPassword
@@ -310,16 +315,20 @@ public class UserService implements CommunityConstant {
             return map;
         }
 
-        // 验证原密码
+        // 验证原密码（hostHolder里只存了UserDTO，密码没有，所以需要访问数据库得到原来的密码）
         User user = userMapper.selectById(userId);
         if (!CommunityUtil.md5(oldPassword + user.getSalt()).equals(user.getPassword())) {  // 原密码正确
             map.put("oldPasswordMsg", "原密码不正确！");
             return map;
         }
 
+        if (!CommunityUtil.md5(newPassword + user.getSalt()).equals(user.getPassword())) {  // 新旧密码相同
+            map.put("newPasswordMsg", "新密码不能与原密码相同！");
+            return map;
+        }
+
         // 更新密码
         userMapper.updatePassword(userId, CommunityUtil.md5(newPassword + user.getSalt()));
-        clearCache(userId);
         return map;
     }
 

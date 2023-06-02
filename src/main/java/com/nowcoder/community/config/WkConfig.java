@@ -16,6 +16,7 @@ import java.io.File;
  * @Description: TODO
  */
 @Configuration
+@Deprecated
 public class WkConfig {
     private static final Logger logger = LoggerFactory.getLogger(WkConfig.class);
 

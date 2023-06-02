@@ -11,14 +11,13 @@ import com.nowcoder.community.util.CommunityUtil;
 import com.nowcoder.community.util.HostHolder;
 import com.nowcoder.community.util.RedisKeyUtil;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
@@ -34,6 +33,8 @@ import java.util.*;
 @Controller
 @RequestMapping(path = "/discuss")
 public class DiscussPostController implements CommunityConstant {
+    private static final Logger logger = LoggerFactory.getLogger(DiscussPostService.class);
+
     @Autowired
     private DiscussPostService discussPostService;
 
@@ -53,7 +54,7 @@ public class DiscussPostController implements CommunityConstant {
     private EventProducer eventProducer;
 
     @Autowired
-    private RedisTemplate redisTemplate;
+    private RedisTemplate<String, Object> redisTemplate;
 
 
     /**
@@ -65,25 +66,25 @@ public class DiscussPostController implements CommunityConstant {
      */
     @RequestMapping(path = "/add", method = RequestMethod.POST)
     @ResponseBody
-    public String addDiscussPost(String title, String content) {
+    public String addDiscussPost(/*String title, String content*/@RequestBody DiscussPost post) {
         User user = hostHolder.getUser();
         // 判断空值
         if (user == null) {
             return CommunityUtil.getJSONString(403, "你还没有登录！");
         }
-        if (StringUtils.isBlank(title) || StringUtils.isBlank(content)) {
+        if (StringUtils.isBlank(post.getTitle()) || StringUtils.isBlank(post.getContent())) {
             return CommunityUtil.getJSONString(403, "帖子标题或内容不能为空！");
         }
 
-        // 发布帖子
+        // 发布帖子，将帖子数据插入到数据库中
         DiscussPost discussPost = new DiscussPost();
         discussPost.setUserId(user.getId());
-        discussPost.setTitle(title);
-        discussPost.setContent(content);
+        discussPost.setTitle(post.getTitle());
+        discussPost.setContent(post.getContent());
         discussPost.setCreateTime(new Date());
         discussPostService.addDiscussPost(discussPost);
 
-        // 触发发帖事件
+        // 触发发帖事件，发布帖子时将其加入到Elasticsearch服务器上
         Event event = new Event()
                 .setTopic(TOPIC_PUBLISH)
                 .setUserId(user.getId())
@@ -94,7 +95,6 @@ public class DiscussPostController implements CommunityConstant {
         // 计算帖子分数
         String redisKey = RedisKeyUtil.getPostScoreKey();
         redisTemplate.opsForSet().add(redisKey, discussPost.getId());
-
 
         // 报错的情况将来统一处理
         return CommunityUtil.getJSONString(0, "发布成功！");
@@ -109,7 +109,6 @@ public class DiscussPostController implements CommunityConstant {
      */
     @RequestMapping(path = "/detail/{discussPostId}", method = RequestMethod.GET)
     public String getDiscussPost(@PathVariable("discussPostId") int discussPostId, Model model, Page page) {
-        // 帖子
         DiscussPost discussPost = discussPostService.getDiscussPostById(discussPostId);
         if (discussPost == null) {
             return "redirect:/site/error/404";
@@ -124,6 +123,7 @@ public class DiscussPostController implements CommunityConstant {
         // 点赞数量
         long likeCount = likeService.getEntityLikeCount(ENTITY_TYPE_POST, discussPostId);
         model.addAttribute("likeCount", likeCount);
+
         // 点赞状态(若未登录，直接返回0)
         int likeStatus = hostHolder.getUser() == null ? 0 : likeService.getEntityLikeStatus(hostHolder.getUser().getId(), ENTITY_TYPE_POST, discussPostId);
         model.addAttribute("likeStatus", likeStatus);
@@ -136,7 +136,7 @@ public class DiscussPostController implements CommunityConstant {
         // 评论：给帖子的评论
         // 回复：给评论的评论
         // 评论列表
-        List<Comment> commentList = commentService.getComments(ENTITY_TYPE_POST, discussPostId, page.getOffset(), page.getLimit());
+        List<Comment> commentList = commentService.getCommentsByEntity(ENTITY_TYPE_POST, discussPostId, page.getOffset(), page.getLimit());
         // 评论VO列表
         List<Map<String, Object>> commentVoList = new ArrayList<>();
         if (commentList != null) {
@@ -145,7 +145,7 @@ public class DiscussPostController implements CommunityConstant {
                 Map<String, Object> commentVo = new HashMap<>();
                 // 评论
                 commentVo.put("comment", comment);
-                // 评论作者
+                // 评论的作者
                 User commentUser = userService.getUserById(comment.getUserId());
                 commentVo.put("commentUser", commentUser);
                 // 点赞数量
@@ -156,7 +156,7 @@ public class DiscussPostController implements CommunityConstant {
                 commentVo.put("likeStatus", likeStatus);
 
                 // 回复列表
-                List<Comment> replyList = commentService.getComments(ENTITY_TYPE_COMMENT, comment.getId(), 0, Integer.MAX_VALUE);
+                List<Comment> replyList = commentService.getCommentsByEntity(ENTITY_TYPE_COMMENT, comment.getId(), 0, Integer.MAX_VALUE);
                 // 回复VO列表
                 List<Map<String, Object>> replyVoList = new ArrayList<>();
                 if (replyList != null) {
@@ -165,7 +165,7 @@ public class DiscussPostController implements CommunityConstant {
                         Map<String, Object> replyVo = new HashMap<>();
                         // 回复
                         replyVo.put("reply", reply);
-                        // 回复作者
+                        // 回复的作者
                         User replyUser = userService.getUserById(reply.getUserId());
                         replyVo.put("replyUser", replyUser);
                         // 点赞数量
@@ -208,6 +208,7 @@ public class DiscussPostController implements CommunityConstant {
         // 获取置顶状态，1为置顶，0为正常状态，1^1=0, 0^1=1
         int type = post.getType() ^ 1;
         discussPostService.updateDiscussPostType(id, type);
+
         // 返回的结果
         Map<String, Object> map = new HashMap<>();
         map.put("type", type);
@@ -219,6 +220,7 @@ public class DiscussPostController implements CommunityConstant {
                 .setEntityType(ENTITY_TYPE_POST)
                 .setEntityId(id);
         eventProducer.fireEvent(event);
+
         return CommunityUtil.getJSONString(0, null, map);
     }
 
@@ -236,6 +238,7 @@ public class DiscussPostController implements CommunityConstant {
         // 获取加精状态，1为加精，0为正常状态，1^1=0, 0^1=1
         int status = post.getStatus() ^ 1;
         discussPostService.updateDiscussPostStatus(id, status);
+
         // 返回的结果
         Map<String, Object> map = new HashMap<>();
         map.put("status", status);
@@ -256,7 +259,7 @@ public class DiscussPostController implements CommunityConstant {
     }
 
     /**
-     * 加精
+     * 删帖
      *
      * @param id
      * @return
@@ -276,6 +279,9 @@ public class DiscussPostController implements CommunityConstant {
 
         return CommunityUtil.getJSONString(0);
     }
+
+//    @GetMapping("/myDiscussPosts")
+
 
 
 }

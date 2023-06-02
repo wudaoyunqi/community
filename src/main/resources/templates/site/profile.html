@@ -74,10 +74,10 @@
                         <a class="nav-link active" th:href="@{|/user/profile/${user.id}|}">个人信息</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="my-post.html">我的帖子</a>
+                        <a class="nav-link" th:href="@{|/user/allpost/${user.id}|}">我的帖子</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="my-reply.html">我的回复</a>
+                        <a class="nav-link" th:href="@{|/user/allreply/${user.id}|}">我的回复</a>
                     </li>
                 </ul>
             </div>

@@ -57,7 +57,7 @@ public class LoginController implements CommunityConstant {
     private MailClient mailClient;
 
     @Autowired
-    private RedisTemplate redisTemplate;
+    private RedisTemplate<String, Object> redisTemplate;
 
 
     /**

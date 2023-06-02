@@ -28,14 +28,14 @@ public interface CommunityConstant {
     int ACTIVATION_FAILURE = 2;
 
     /**
-     * 默认状态的登录凭证过期时间（12个小时）
+     * 默认状态的登录凭证过期时间（1个小时）
      */
-    int DEFAULT_EXPIRED_SECONDS = 3600 * 12;
+    int DEFAULT_EXPIRED_SECONDS = 3600;
 
     /**
-     * 记住状态的登陆凭证过期时间（100天）
+     * 记住状态的登陆凭证过期时间（1天）
      */
-    int REMEMBER_EXPIRED_SECONDS = 3600 * 24 * 100;
+    int REMEMBER_EXPIRED_SECONDS = 3600 * 24;
 
     /**
      * 实体类型：帖子

@@ -16,6 +16,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Enumeration;
 
 /**
  * @Projectname: community
@@ -62,7 +63,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter implements Comm
                 )
                 .antMatchers(
                         "/discuss/delete",
-                        "/data/**"
+                        "/data/**",
+                        "/actuator/**"
                 )
                 .hasAnyAuthority(
                         AUTHORITY_ADMIN
@@ -76,11 +78,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter implements Comm
                     // 当用户没登录时需要进入哪个组件进行认证
                     @Override
                     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
-                        String xRequestedWith = request.getHeader("x-requested-with");
+                        Enumeration<String> headers = request.getHeaderNames();
+//                        while(headers.hasMoreElements())
+//                            System.out.println(headers.nextElement());
+                        String xRequestedWith = request.getHeader("X-Requested-With");
                         if ("XMLHttpRequest".equals(xRequestedWith)) {
                             response.setContentType("application/plain;charset=utf-8");
                             PrintWriter writer = response.getWriter();
-                            writer.write(CommunityUtil.getJSONString(403, "你还没有登录！"));
+                            writer.write(CommunityUtil.getJSONString(403, "Spring Security——你还没有登录哦！"));
                         } else {
                             response.sendRedirect(request.getContextPath() + "/login");
                         }

@@ -2,7 +2,7 @@ package com.nowcoder.community.config;
 
 import com.nowcoder.community.quartz.AlphaJob;
 import com.nowcoder.community.quartz.PostScoreRefreshJob;
-import com.nowcoder.community.quartz.WKImageDeleteJob;
+//import com.nowcoder.community.quartz.WKImageDeleteJob;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.SimpleTrigger;
@@ -74,8 +74,8 @@ public class QuartzConfig {
         triggerFactoryBean.setJobDetail(postScoreRefreshJobDetail);
         triggerFactoryBean.setName("postScoreRefreshTrigger");
         triggerFactoryBean.setGroup("communityTriggerGroup");
-        // 每隔五分钟刷新一次帖子分数
-        triggerFactoryBean.setRepeatInterval(1000 * 60 * 5);
+        // 每隔三分钟刷新一次帖子分数
+        triggerFactoryBean.setRepeatInterval(1000 * 60 * 3);
         triggerFactoryBean.setJobDataMap(new JobDataMap());
         return triggerFactoryBean;
     }
@@ -85,28 +85,28 @@ public class QuartzConfig {
      *
      * @return
      */
-    @Bean
-    public JobDetailFactoryBean wkImageDeleteJobDetail() {
-        JobDetailFactoryBean factoryBean = new JobDetailFactoryBean();
-        factoryBean.setJobClass(WKImageDeleteJob.class);
-        factoryBean.setName("wkImageDeleteJob");
-        factoryBean.setGroup("communityJobGroup");
-        factoryBean.setDurability(true);
-        factoryBean.setRequestsRecovery(true);
-        return factoryBean;
-    }
+//    @Bean
+//    public JobDetailFactoryBean wkImageDeleteJobDetail() {
+//        JobDetailFactoryBean factoryBean = new JobDetailFactoryBean();
+//        factoryBean.setJobClass(WKImageDeleteJob.class);
+//        factoryBean.setName("wkImageDeleteJob");
+//        factoryBean.setGroup("communityJobGroup");
+//        factoryBean.setDurability(true);
+//        factoryBean.setRequestsRecovery(true);
+//        return factoryBean;
+//    }
 
-    @Bean
-    public SimpleTriggerFactoryBean wkImageDeleteTrigger(JobDetail wkImageDeleteJobDetail) {
-        SimpleTriggerFactoryBean triggerFactoryBean = new SimpleTriggerFactoryBean();
-        triggerFactoryBean.setJobDetail(wkImageDeleteJobDetail);
-        triggerFactoryBean.setName("wkImageDeleteTrigger");
-        triggerFactoryBean.setGroup("communityTriggerGroup");
-        // 每隔四分钟删除一分钟之前由分享功能所创建的临时文件
-        triggerFactoryBean.setRepeatInterval(1000 * 60 * 4);
-        triggerFactoryBean.setJobDataMap(new JobDataMap());
-        return triggerFactoryBean;
-    }
+//    @Bean
+//    public SimpleTriggerFactoryBean wkImageDeleteTrigger(JobDetail wkImageDeleteJobDetail) {
+//        SimpleTriggerFactoryBean triggerFactoryBean = new SimpleTriggerFactoryBean();
+//        triggerFactoryBean.setJobDetail(wkImageDeleteJobDetail);
+//        triggerFactoryBean.setName("wkImageDeleteTrigger");
+//        triggerFactoryBean.setGroup("communityTriggerGroup");
+//        // 每隔四分钟删除一分钟之前由分享功能所创建的临时文件
+//        triggerFactoryBean.setRepeatInterval(1000 * 60 * 4);
+//        triggerFactoryBean.setJobDataMap(new JobDataMap());
+//        return triggerFactoryBean;
+//    }
 
 
 }

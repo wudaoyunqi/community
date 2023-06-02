@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class LikeService {
     @Autowired
-    private RedisTemplate redisTemplate;
+    private RedisTemplate<String, Object> redisTemplate;
 
     // 点赞
     public void like(int userId, int entityType, int entityId, int entityUserId) {

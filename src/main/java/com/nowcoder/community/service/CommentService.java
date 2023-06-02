@@ -33,16 +33,24 @@ public class CommentService {
     @Autowired
     private DiscussPostService discussPostService;
 
-    public List<Comment> getComments(int entityType, int entityId, int offset, int limit) {
+    public List<Comment> getCommentsByEntity(int entityType, int entityId, int offset, int limit) {
         return commentMapper.selectCommentsByEntity(entityType, entityId, offset, limit);
     }
 
-    public int getCommentRows(int entityType, int entityId) {
+    public int getCommentRowsByEntity(int entityType, int entityId) {
         return commentMapper.selectCommentRowsByEntity(entityType, entityId);
     }
 
     public Comment getCommentById(int id) {
         return commentMapper.selectCommentById(id);
+    }
+
+    public List<Comment> getCommentsByUserId(int userId, int offset, int limit) {
+        return commentMapper.selectCommentsByUserId(userId, offset, limit);
+    }
+
+    public int getCommentRowsByUserId(int userId) {
+        return commentMapper.selectCommentRowsByUserId(userId);
     }
 
     /**
@@ -67,7 +75,7 @@ public class CommentService {
 
         // 更新帖子评论数量
         if (comment.getEntityType() == ENTITY_TYPE_POST) {
-            discussPostService.updateCommentCount(comment.getEntityId(), getCommentRows(comment.getEntityType(), comment.getEntityId()));
+            discussPostService.updateCommentCount(comment.getEntityId(), getCommentRowsByEntity(comment.getEntityType(), comment.getEntityId()));
         }
 
         return rows;

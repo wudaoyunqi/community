@@ -28,7 +28,7 @@ public class QuartzTests {
 
     @Test
     public void testDeleteJob() throws SchedulerException {
-        boolean result = scheduler.deleteJob(new JobKey("alphaJob", "alphaJobGroup"));
+        boolean result = scheduler.deleteJob(new JobKey("wkImageDeleteJob", "communityJobGroup"));
         System.out.println(result);
     }
 

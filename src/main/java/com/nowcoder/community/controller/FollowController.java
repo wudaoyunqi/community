@@ -81,9 +81,6 @@ public class FollowController implements CommunityConstant {
     /**
      * 取消关注（异步请求）
      *
-     * @param entityType
-     * @param entityId
-     * @return
      */
     @LoginRequired
     @RequestMapping(path = "/unfollow", method = RequestMethod.POST)

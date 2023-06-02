@@ -8,6 +8,7 @@ import com.nowcoder.community.entity.DiscussPost;
 import com.nowcoder.community.entity.LoginTicket;
 import com.nowcoder.community.entity.Message;
 import com.nowcoder.community.entity.User;
+import com.nowcoder.community.service.DiscussPostService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -15,6 +16,8 @@ import org.springframework.test.context.ContextConfiguration;
 
 import java.util.Date;
 import java.util.List;
+
+import static java.lang.Thread.sleep;
 
 /**
  * @Projectname: community
@@ -27,11 +30,16 @@ import java.util.List;
 @SpringBootTest
 @ContextConfiguration(classes = CommunityApplication.class)
 public class MapperTests {
+
     @Autowired
     private UserMapper userMapper;
 
     @Autowired
     private DiscussPostMapper discussPostMapper;
+
+
+    @Autowired
+    private DiscussPostService discussPostService;
 
     @Autowired
     private LoginTicketMapper loginTicketMapper;
@@ -111,6 +119,34 @@ public class MapperTests {
         System.out.println(count);
 
 
+    }
+
+    @Test
+    public void testSelectPostTime() {
+        int offset = 280000, limit = 20;
+        long start = System.currentTimeMillis();
+//        discussPostMapper.selectDiscussPosts(offset, limit);
+        long end = System.currentTimeMillis();
+        System.out.printf("获取[%d, %d]行数据一共花了%d秒%n", offset, offset + limit, (end - start) / 1000);
+
+
+        try {
+            sleep(100000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Test
+    public void testDiscussPostService() {
+        DiscussPost data;
+        data = new DiscussPost();
+        data.setUserId(2);
+        data.setTitle("Test Title");
+        data.setContent("Test Content");
+        data.setCreateTime(new Date());
+        discussPostService.addDiscussPost(data);
+        DiscussPost post = discussPostService.getDiscussPostById(data.getId());
     }
 
 

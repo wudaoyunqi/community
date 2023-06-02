@@ -25,7 +25,7 @@ CREATE TABLE `comment`
 DROP TABLE IF EXISTS `discuss_post`;
 SET
 character_set_client = utf8mb4 ;
-CREATE TABLE `discuss_post`
+CREATE TABLE `discuss_post_new`
 (
     `id`            int(11) NOT NULL AUTO_INCREMENT,
     `user_id`       varchar(45)  DEFAULT NULL,

@@ -34,6 +34,12 @@ public class ElasticsearchService {
     @Autowired
     private ElasticsearchRestTemplate elasticsearchRestTemplate;
 
+    /**
+     * 新增或者修改文档（行记录）
+     * 因为save方法传入的实体id已经存在的话，那么repository会执行覆盖操作；如果id不存在，那就是会新增一条文档（行记录）
+     *
+     * @param discussPost
+     */
     public void saveDiscussPost(DiscussPost discussPost) {
         discussPostRepository.save(discussPost);
     }

@@ -9,6 +9,7 @@ import java.util.Date;
  * @Date: 2023/2/24 21:36
  * @Description: TODO
  */
+@Deprecated
 public class LoginTicket {
     private int id;
     private int userId;

@@ -16,11 +16,17 @@ public class RedisKeyUtil {
     private static final String PREFIX_FOLLOWER = "follower";
     private static final String PREFIX_FOLLOWEE = "followee";
     private static final String PREFIX_KAPTCHA = "login:kaptcha";
-    private static final String PREFIX_TICKET = "login:token";
+    private static final String PREFIX_TOKEN = "login:token";
     private static final String PREFIX_USER = "user";
     private static final String PREFIX_UV = "uv";
     private static final String PREFIX_DAU = "dau";
+
+    // 存储更新帖子分数涉及到的postId
     private static final String PREFIX_POST = "post";
+
+    private static final String PREFIX_HOT_POST = "hotPost";
+
+    private static final String PREFIX_RATE_LIMIT_PUBLISH = "rate:limit:publish";
 
 
     // 某个实体的赞
@@ -54,7 +60,7 @@ public class RedisKeyUtil {
 
     // 登录凭证
     public static String getTokenKey(String token) {
-        return PREFIX_TICKET + SPLIT + token;
+        return PREFIX_TOKEN + SPLIT + token;
     }
 
     public static String getUserKey(int userId) {
@@ -84,6 +90,14 @@ public class RedisKeyUtil {
     // 帖子分数
     public static String getPostScoreKey() {
         return PREFIX_POST + SPLIT + "score";
+    }
+
+    public static String getHotPostKey(int offset, int limit) {
+        return PREFIX_HOT_POST + SPLIT + offset + SPLIT + limit;
+    }
+
+    public static String getRateLimitPublish(int userId) {
+        return PREFIX_RATE_LIMIT_PUBLISH + SPLIT + userId;
     }
 
 }

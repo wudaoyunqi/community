@@ -43,7 +43,7 @@ import java.util.concurrent.Future;
  */
 
 @Component
-public class EventConsumer implements CommunityConstant {
+public class    EventConsumer implements CommunityConstant {
     private static final Logger logger = LoggerFactory.getLogger(EventConsumer.class);
 
     @Autowired
@@ -129,7 +129,7 @@ public class EventConsumer implements CommunityConstant {
         elasticsearchService.saveDiscussPost(post);
     }
 
-    // 消费删帖事件
+    // 消费删帖事件，删帖时将帖子从Elasticsearch服务器上删掉
     @KafkaListener(topics = {TOPIC_DELETE})
     public void handleDeleteMessage(ConsumerRecord record) {
         if (record == null || record.value() == null) {
@@ -146,6 +146,7 @@ public class EventConsumer implements CommunityConstant {
 
     // 消费分享事件
     @KafkaListener(topics = {TOPIC_SHARE})
+    @Deprecated
     public void handleShareMessage(ConsumerRecord record) {
         if (record == null || record.value() == null) {
             logger.error("消息的内容为空！");
@@ -175,6 +176,7 @@ public class EventConsumer implements CommunityConstant {
         task.setFuture(future);
     }
 
+    @Deprecated
     class UploadTask implements Runnable {
         // 文件名称
         private String fileName;

@@ -13,10 +13,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.Date;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * @Projectname: community
@@ -37,6 +34,7 @@ public class ThreadPoolTests {
 
     // JDK可执行定时任务的线程池
     private ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(5);
+    private ScheduledThreadPoolExecutor scheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(5);
 
     // Spring普通线程池
     @Autowired
@@ -76,14 +74,22 @@ public class ThreadPoolTests {
     // 2. JDK可执行定时任务的线程池
     @Test
     public void testScheduledExecutorService() {
-        Runnable task = new Runnable() {
+        Runnable task1 = new Runnable() {
             @Override
             public void run() {
                 logger.info("hello scheduledExecutorService");
             }
         };
 
-        scheduledExecutorService.scheduleAtFixedRate(task, 10000, 1000, TimeUnit.MILLISECONDS);
+        Runnable task2 = new Runnable() {
+            @Override
+            public void run() {
+                logger.info("hello scheduledThreadPoolExecutor");
+            }
+        };
+
+        scheduledExecutorService.scheduleAtFixedRate(task1, 10000, 1000, TimeUnit.MILLISECONDS);
+        scheduledThreadPoolExecutor.scheduleAtFixedRate(task2, 1000, 1000, TimeUnit.MILLISECONDS);
         sleep(30000);
     }
 
@@ -97,7 +103,9 @@ public class ThreadPoolTests {
             }
         };
         for (int i = 0; i < 10; i++) {
+            // submit 与 execute的区别是，submit可以获取线程返回值，他返回的是一个Future<?>对象
             taskExecutor.submit(task);
+            taskExecutor.execute(task);
         }
         sleep(10000);
     }

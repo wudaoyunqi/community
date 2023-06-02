@@ -33,6 +33,7 @@ import static com.nowcoder.community.util.CommunityConstant.TOPIC_SHARE;
  */
 
 @Controller
+@Deprecated
 public class ShareController {
     private static final Logger logger = LoggerFactory.getLogger(ShareController.class);
 

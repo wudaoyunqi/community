@@ -83,11 +83,11 @@ public class AlphaService {
     public Object save1() {
         // 新增用户
         User user = new User();
-        user.setUsername("alpha");
+        user.setUsername("alpha1");
         user.setSalt(CommunityUtil.generateUUID().substring(0, 5));
         user.setPassword(CommunityUtil.md5("123" + user.getSalt()));
-        user.setEmail("alpha@qq.com");
-        user.setHeaderUrl("http://image.nowcoder.com/head/99t.png");
+        user.setEmail("alpha1@qq.com");
+        user.setHeaderUrl("http://image.nowcoder.com/head/199t.png");
         user.setCreateTime(new Date());
         userMapper.insertUser(user);
 
@@ -99,6 +99,7 @@ public class AlphaService {
         post.setCreateTime(new Date());
         discussPostMapper.insertDiscussPost(post);
 
+        // 这行代码会出错，导致前面的新增用户和新增帖子都失败，数据表不会有任何变化
         Integer.valueOf("abc");
 
         return "ok";

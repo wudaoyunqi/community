@@ -28,7 +28,7 @@ public class ExceptionAdvice {
     private static final Logger logger = LoggerFactory.getLogger(ExceptionAdvice.class);
 
     @ExceptionHandler({Exception.class})
-    public void handleException(Exception e, HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public void exceptionHandler(Exception e, HttpServletRequest request, HttpServletResponse response) throws IOException {
         logger.error("服务器发生异常：" + e.getMessage());
         for (StackTraceElement element : e.getStackTrace()) {
             logger.error(element.toString());

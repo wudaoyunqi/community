@@ -37,6 +37,22 @@
         limit #{offset}, #{limit}
     </select>
 
+    <!--    <select id="selectDiscussPosts1" resultType="DiscussPost">-->
+    <!--        select-->
+    <!--        <include refid="selectFields"></include>-->
+    <!--        from discuss_post-->
+    <!--        where id &lt; (select id from discuss_post order by id desc limit #{offset}, 1)-->
+    <!--        &lt;!&ndash;        <if test="userId!=0">&ndash;&gt;-->
+    <!--        &lt;!&ndash;            and user_id = #{userId}&ndash;&gt;-->
+    <!--        &lt;!&ndash;        </if>&ndash;&gt;-->
+    <!--        &#45;&#45; and status != 2-->
+    <!--        order by id desc-->
+    <!--        &lt;!&ndash;        <if test="orderMode==1">&ndash;&gt;-->
+    <!--        &lt;!&ndash;            order by type desc, score desc, id desc&ndash;&gt;-->
+    <!--        &lt;!&ndash;        </if>&ndash;&gt;-->
+    <!--        limit 0, #{limit}-->
+    <!--    </select>-->
+
     <select id="selectDiscussPostRows" resultType="int">
         select count(id)
         from discuss_post
@@ -49,6 +65,15 @@
     <insert id="insertDiscussPost" parameterType="DiscussPost" keyProperty="id">
         insert into discuss_post(<include refid="insertFields"></include>)
         values(#{userId}, #{title}, #{content}, #{type}, #{status}, #{createTime}, #{commentCount}, #{score})
+    </insert>
+
+    <insert id="insertDiscussPostBatch" parameterType="java.util.List">
+        insert into discuss_post_new_3(<include refid="insertFields"></include>)
+        values
+        <foreach collection="list" item="tt" separator=",">
+            (#{tt.userId}, #{tt.title}, #{tt.content}, #{tt.type}, #{tt.status}, #{tt.createTime}, #{tt.commentCount},
+            #{tt.score})
+        </foreach>
     </insert>
 
     <select id="selectDiscussPostById" resultType="DiscussPost">

@@ -1,10 +1,11 @@
 package com.nowcoder.community.controller;
 
 import com.nowcoder.community.annotation.LoginRequired;
+import com.nowcoder.community.entity.Comment;
+import com.nowcoder.community.entity.DiscussPost;
+import com.nowcoder.community.entity.Page;
 import com.nowcoder.community.entity.User;
-import com.nowcoder.community.service.FollowService;
-import com.nowcoder.community.service.LikeService;
-import com.nowcoder.community.service.UserService;
+import com.nowcoder.community.service.*;
 import com.nowcoder.community.util.CommunityConstant;
 import com.nowcoder.community.util.CommunityUtil;
 import com.nowcoder.community.util.HostHolder;
@@ -17,18 +18,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.Resource;
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -59,6 +61,12 @@ public class UserController implements CommunityConstant {
 
     @Autowired
     private HostHolder hostHolder;
+
+    @Resource
+    private DiscussPostService discussPostService;
+
+    @Resource
+    private CommentService commentService;
 
     @Autowired
     private LikeService likeService;
@@ -100,6 +108,7 @@ public class UserController implements CommunityConstant {
         return "/site/setting";
     }
 
+
     /**
      * 更新头像链接
      *
@@ -116,6 +125,7 @@ public class UserController implements CommunityConstant {
         userService.updateHeader(hostHolder.getUser().getId(), newHeaderUrl);
         return CommunityUtil.getJSONString(0);
     }
+
 
     /**
      * 上传头像
@@ -164,6 +174,7 @@ public class UserController implements CommunityConstant {
 
     }
 
+
     /**
      * 获取头像
      * 返回的是图片数据的二进制流，所以不是返回模板也不是返回json数据，故返回类型为空，而不是String
@@ -198,6 +209,7 @@ public class UserController implements CommunityConstant {
 
     }
 
+
     /**
      * 更新密码
      *
@@ -219,6 +231,7 @@ public class UserController implements CommunityConstant {
             return "/site/setting";
         }
     }
+
 
     @RequestMapping(path = "/profile/{userId}", method = RequestMethod.GET)
     public String getProfilePage(@PathVariable("userId") int userId, Model model) {
@@ -249,6 +262,94 @@ public class UserController implements CommunityConstant {
         model.addAttribute("hasFollowed", hasFollowed);
 
         return "/site/profile";
+    }
+
+    /**
+     * 我的帖子
+     *
+     * @param userId
+     * @param model
+     * @return
+     */
+    @GetMapping(path = "/allpost/{userId}")
+    public String getMyPostPage(@PathVariable("userId") int userId, Model model, Page page) {
+        // keypoint 1. 判断用户是否存在
+        User user = userService.getUserById(userId);
+        if (user == null) {
+            throw new RuntimeException("该用户不存在！");
+        }
+        model.addAttribute("user", user);
+
+        // keypoint 2. 设置分页
+        int rows = discussPostService.getDiscussPostRows(userId);
+        page.setRows(rows);
+        page.setPath("/user/allpost/" + userId);
+        model.addAttribute("rows", rows);
+
+        // keypoint 3. 获取用户发的帖子列表
+        List<DiscussPost> list = discussPostService.getDiscussPosts(userId, page.getOffset(), page.getLimit(), 0);
+        List<Map<String, Object>> discussVOList = new ArrayList<>();
+        if (list != null) {
+            for (DiscussPost post : list) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("post", post);
+                Long likeCount = likeService.getEntityLikeCount(ENTITY_TYPE_POST, post.getId());
+                map.put("likeCount", likeCount);
+                discussVOList.add(map);
+            }
+        }
+        model.addAttribute("discussPosts", discussVOList);
+        return "/site/my-post";
+    }
+
+    /**
+     * 我的回复
+     *
+     * @param userId
+     * @param model
+     * @param page
+     * @return
+     */
+    @GetMapping(path = "/allreply/{userId}")
+    public String getMyReplyPage(@PathVariable("userId") int userId, Model model, Page page) {
+        // keypoint 1. 判断用户是否存在
+        User user = userService.getUserById(userId);
+        if (user == null) {
+            throw new RuntimeException("该用户不存在！");
+        }
+        model.addAttribute("user", user);
+
+        // keypoint 2. 设置分页
+        int rows = commentService.getCommentRowsByUserId(userId);
+        page.setRows(rows);
+        page.setPath("/user/allreply/" + userId);
+        model.addAttribute("rows", rows);
+
+        // keypoint 3. 回复列表
+        List<Comment> list = commentService.getCommentsByUserId(userId, page.getOffset(), page.getLimit());
+        List<Map<String, Object>> commentVOList = new ArrayList<>();
+        if (list != null) {
+            for (Comment comment : list) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("comment", comment);
+                // 显示评论/回复对应的文章信息
+                // 如果是对帖子的评论，则直接利用entityId当做postId查询帖子
+                if (comment.getEntityType() == ENTITY_TYPE_POST) {
+                    DiscussPost post = discussPostService.getDiscussPostById(comment.getEntityId());
+                    map.put("post", post);
+                } else {
+                    // 如果是对评论的回复，则先根据entityId当做commentId查询到评论记录，再根据其entityId作为postId查询帖子（仅限一层回复，没有楼中楼回复）
+                    // 很巧的是，前端在记录对评论的回复的时候entityId = commentId，并不是replyId，所以可以查到回复的帖子hhhhh
+                    // 至于评论层主或者楼中楼的时候，会记录一个targetId = commentUser / replyUser，所以发送通知的时候是正常的
+                    Comment targetComment = commentService.getCommentById(comment.getEntityId());
+                    DiscussPost post = discussPostService.getDiscussPostById(targetComment.getEntityId());
+                    map.put("post", post);
+                }
+                commentVOList.add(map);
+            }
+        }
+        model.addAttribute("comments", commentVOList);
+        return "/site/my-reply";
     }
 
 
